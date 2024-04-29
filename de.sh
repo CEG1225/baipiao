@@ -12,7 +12,7 @@ while read line; do
     # 如果不是数字，就忽略这一行，即删除
     echo "Ignoring: $line"
   fi
-done < ipip.txt
+done < ip.txt
 
 # 将临时文件覆盖原文件，从而只保留以数字开头的行
 mv temp_ips.txt ipip.txt
