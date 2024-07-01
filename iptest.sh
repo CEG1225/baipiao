@@ -4,12 +4,13 @@
 tcping() {
     local ip=$1
     local port=$2
-    local start_time=$(date +%s%3N)
+    local start_time=$(date +%s%N)
     timeout 1 bash -c "cat < /dev/null > /dev/tcp/$ip/$port" 2>/dev/null
     if [ $? -eq 0 ]; then
-        local end_time=$(date +%s%3N)
-        local duration=$((end_time - start_time))
-        echo "$duration"
+        local end_time=$(date +%s%N)
+        local duration_ns=$((end_time - start_time))
+        local duration_ms=$(echo "scale=2; $duration_ns / 1000000" | bc)
+        echo "$duration_ms"
     else
         echo "timeout"
     fi
@@ -56,13 +57,11 @@ while IFS= read -r line; do
 done < "$input_file"
 
 # 按ping时间排序并获取前20个IP和端口
-for ip_port in $(printf "%s\n" "${!ip_times[@]}" | sort -n -t':' -k2 | head -n 20); do
+for ip_port in $(printf "%s\n" "${!ip_times[@]}" | awk -F: '{print $1":"$2":"$3}' | sort -t: -k3,3n | head -n 20); do
     echo "$ip_port#${ip_times[$ip_port]}" >> "$output_file"
 done
 
 # 启动 OpenClash
 start_openclash
-
-sleep 15
 
 echo "TCP ping 测试完成。结果已保存到 $output_file"
